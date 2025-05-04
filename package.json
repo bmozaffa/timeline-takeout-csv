@@ -1,0 +1,16 @@
+{
+  "name": "timeline-to_csv",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Extract places from a Google Timeline Takeout and create a CSV file",
+  "main": "app.js",
+  "scripts": {
+    "start": "node app.js"
+  },
+  "keywords": ["Google Maps Timeline", "Google Takeout"],
+  "author": "Babak Mozaffari",
+  "license": "Apache-2.0",
+  "dependencies": {
+    "papaparse": "^5.5.2"
+  }
+}
