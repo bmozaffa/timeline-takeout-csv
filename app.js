@@ -48,18 +48,24 @@ async function main() {
     timelineObjects.push(...jsonData.timelineObjects);
   }
   let places = [];
+  let activities = [];
   for (const entry of timelineObjects) {
     if (entry.placeVisit) {
       const place = getPlace(entry.placeVisit);
       places.push(place);
-    } else if (entry.activitySegment) {
-      //Ignore for now!
+    } else if (entry.activitySegment ) {
+      if (entry.activitySegment.startLocation.latitudeE7) {
+        const activity = getActivity(entry.activitySegment);
+        activities.push(activity);
+      }
     } else {
       throw new Error("Unexpected type!");
     }
   }
-  const csvString = unparse(places);
-  fs.writeFileSync(path.join(takeoutLocation, "timeline.csv"), csvString);
+  const placesCSV = unparse(places);
+  fs.writeFileSync(path.join(takeoutLocation, "timeline.csv"), placesCSV);
+  const activitiesCSV = unparse(activities);
+  fs.writeFileSync(path.join(takeoutLocation, "activities.csv"), activitiesCSV);
 }
 
 function getPlace(visit) {
@@ -82,6 +88,40 @@ function getPlace(visit) {
   place.End = formatDate(visit.duration.endTimestamp);
   place.Confidence = visit.placeConfidence;
   return place;
+}
+
+function getActivity(segment) {
+  const activity = {
+    "StartCoordinates": undefined,
+    "StartPlaceName": undefined,
+    "StartPlaceID": undefined,
+    "StartAddress": undefined,
+    "EndCoordinates": undefined,
+    "EndPlaceName": undefined,
+    "EndPlaceID": undefined,
+    "EndAddress": undefined,
+    "Activity": undefined,
+    "StartTimestamp": undefined,
+    "EndTimestamp": undefined,
+    "Confidence": undefined,
+  };
+  const startLatitude = segment.startLocation.latitudeE7 / 1e7;
+  const startLongitude = segment.startLocation.longitudeE7 / 1e7;
+  activity.StartCoordinates = `${startLatitude},${startLongitude}`;
+  activity.StartPlaceName = segment.startLocation.name;
+  activity.StartPlaceID = segment.startLocation.placeId;
+  activity.StartAddress = segment.startLocation.address;
+  const endLatitude = segment.endLocation.latitudeE7 / 1e7;
+  const endLongitude = segment.endLocation.longitudeE7 / 1e7;
+  activity.EndCoordinates = `${endLatitude},${endLongitude}`;
+  activity.EndPlaceName = segment.endLocation.name;
+  activity.EndPlaceID = segment.endLocation.placeId;
+  activity.EndAddress = segment.endLocation.address;
+  activity.StartTimestamp = formatDate(segment.duration.startTimestamp);
+  activity.EndTimestamp = formatDate(segment.duration.endTimestamp);
+  activity.Activity = segment.activityType;
+  activity.Confidence = segment.confidence;
+  return activity;
 }
 
 function formatDate(dateString) {
